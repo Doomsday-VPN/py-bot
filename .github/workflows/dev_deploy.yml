@@ -1,4 +1,4 @@
-name: Deploy 
+name: Deploy dev bot
 on:
   workflow_dispatch: {}
   push:

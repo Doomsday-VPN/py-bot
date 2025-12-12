@@ -1,4 +1,4 @@
-name: Deploy 
+name: Deploy prod bot
 on:
   workflow_dispatch: {}
 
