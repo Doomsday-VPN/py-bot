@@ -1,6 +1,9 @@
-name: Deploy 
+name: Deploy dev bot
 on:
   workflow_dispatch: {}
+  push:
+    branches:
+      - dev
 
 jobs:
   deploy:
@@ -28,10 +31,12 @@ jobs:
         key: ${{ secrets.VPS_PRIVATE_KEY }}
         script: |
           cd /root/ddvpn-bot
-          docker build -f docker/Dockerfile -t py-bot .
+          docker stop py-bot-dev
+          docker rm py-bot-dev
+          docker build -f docker/Dockerfile -t py-bot-dev .
           docker run -d \
-            --name py-bot \
+            --name py-bot-dev \
             --restart unless-stopped \
             -e BOT_TOKEN="${{ secrets.BOT_TOKEN_DEV }}" \
-            py-bot
+            py-bot-dev
           
