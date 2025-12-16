@@ -28,7 +28,7 @@ class VPNBot:
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = update.effective_user
         name = user.first_name or user.username or str(user.id)
-        await update.message.reply_text(f'Hello, {name}! This bot is minimal.')
+        await update.message.reply_text(f'Hi, {name}! This bot is minimal.')
 
     def run(self):
         self.app.run_polling()
