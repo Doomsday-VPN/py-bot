@@ -1,0 +1,92 @@
+name: Test app list logic
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force rebuild all apps (ignore affected)'
+        type: boolean
+        default: false
+
+jobs:
+  test_list_apps:
+    name: Test List Apps Logic
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install jq
+        uses: dcarbone/install-jq-action@v3.2.0
+
+      - name: Debug git info
+        run: |
+          echo "=== Git tags ==="
+          git tag --sort=-v:refname --list "v*" | head -10
+          echo ""
+          echo "=== GITHUB_REF ==="
+          echo "$GITHUB_REF"
+          echo ""
+          echo "=== Current branch ==="
+          git branch --show-current
+
+      - name: List apps (test logic)
+        id: output_data
+        run: |
+          echo "=== Calculating head and base ==="
+          head=${GITHUB_REF#refs/tags/}
+          echo "head=$head"
+          
+          base=$(git tag --sort=-v:refname --list "v*" | grep -v "^$head$" | head -n 1)
+          echo "base=$base"
+          
+          echo ""
+          echo "=== Force input ==="
+          echo "force=${{ inputs.force }}"
+          
+          echo ""
+          echo "=== Commits between base and head ==="
+          if [ -n "$base" ]; then
+            git log --oneline "$base".."$head" 2>/dev/null || echo "Cannot compare (not a tag release?)"
+          else
+            echo "No previous tag found"
+          fi
+          
+          # Симуляция вывода (без nx/yarn)
+          echo ""
+          echo "=== Simulated output ==="
+          # Замените на реальную команду nx когда будете тестировать в реальном проекте:
+          # apps=$(yarn nx show projects --projects "apps/*" --json | jq -r tostring)
+          
+          # Для теста используем mock данные:
+          apps='["app1","app2","nlt","app3"]'
+          echo "apps=$apps"
+          
+          apps_wo_nlt=$(echo $apps | jq -c 'del(.[] | select(. == "nlt"))')
+          echo "apps_wo_nlt=$apps_wo_nlt"
+          
+          apps_w_proxy=$(echo $apps | jq -c '. + ["proxy"]')
+          echo "apps_w_proxy=$apps_w_proxy"
+          
+          # Output для использования в других джобах
+          echo "apps=$apps" >> $GITHUB_OUTPUT
+          echo "apps_wo_nlt=$apps_wo_nlt" >> $GITHUB_OUTPUT
+          echo "apps_w_proxy=$apps_w_proxy" >> $GITHUB_OUTPUT
+
+    outputs:
+      apps: ${{ steps.output_data.outputs.apps }}
+      apps_wo_nlt: ${{ steps.output_data.outputs.apps_wo_nlt }}
+      apps_w_proxy: ${{ steps.output_data.outputs.apps_w_proxy }}
+
+  show_results:
+    name: Show Results
+    runs-on: ubuntu-latest
+    needs: test_list_apps
+    steps:
+      - name: Display outputs
+        run: |
+          echo "=== Final outputs ==="
+          echo "apps: ${{ needs.test_list_apps.outputs.apps }}"
+          echo "apps_wo_nlt: ${{ needs.test_list_apps.outputs.apps_wo_nlt }}"
+          echo "apps_w_proxy: ${{ needs.test_list_apps.outputs.apps_w_proxy }}"
