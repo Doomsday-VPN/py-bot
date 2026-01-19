@@ -1,11 +1,21 @@
 name: Test app list logic
 on:
+  release:
+    types:
+      - 'published'
   workflow_dispatch:
     inputs:
+      env:
+        description: 'Environment'
+        required: true
+        type: choice
+        options:
+          - 'production'
+          - 'preprod'
       force:
-        description: 'Force rebuild all apps (ignore affected)'
+        description: 'Force build of all apps'
+        required: false
         type: boolean
-        default: false
 
 jobs:
   test_list_apps:
