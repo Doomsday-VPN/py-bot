@@ -48,8 +48,12 @@ jobs:
           head=${GITHUB_REF#refs/tags/}
           echo "head=$head"
           
-          base=$(git tag --sort=-v:refname --list "v*" | grep -v "^$head$" | head -n 1)
+          base=$(git tag --sort=-v:refname | grep -v "^$head$" | head -n 1)
           echo "base=$base"
+          
+          echo ""
+          echo "=== All tags (sorted) ==="
+          git tag --sort=-v:refname | head -10
           
           echo ""
           echo "=== Force input ==="
