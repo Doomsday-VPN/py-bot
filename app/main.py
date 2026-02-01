@@ -3,7 +3,7 @@ import os
 import sys
 from dotenv import load_dotenv
 from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -24,11 +24,18 @@ class VPNBot:
 
         self.app = Application.builder().token(self.token).build()
         self.app.add_handler(CommandHandler('start', self.start))
+        self.app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.echo))
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = update.effective_user
         name = user.first_name or user.username or str(user.id)
         await update.message.reply_text(f'Hi, {name}! This bot is minimal.')
+
+    async def echo(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        user = update.effective_user
+        name = user.first_name or user.username or str(user.id)
+        text = update.message.text
+        await update.message.reply_text(f"{name} сказал: {text}")
 
     def run(self):
         self.app.run_polling()
