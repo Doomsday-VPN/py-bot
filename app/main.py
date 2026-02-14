@@ -27,15 +27,30 @@ class VPNBot:
         self.app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.echo))
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        user = update.effective_user
-        name = user.first_name or user.username or str(user.id)
-        await update.message.reply_text(f'Hi, {name}! This bot is minimal.')
+        text = self.load_html_message("start_message.html")
+
+        await update.message.reply_text(
+            text,
+            parse_mode="HTML",
+            disable_web_page_preview=True
+        )
 
     async def echo(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = update.effective_user
         name = user.first_name or user.username or str(user.id)
         text = update.message.text
         await update.message.reply_text(f"{name} сказал: {text}")
+    
+    def load_html_message(self, filename: str) -> str:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(base_path, "messages", filename)
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                return f.read()
+        except FileNotFoundError:
+            logger.error(f"File {file_path} not found.")
+            return "Ошибка загрузки сообщения."
 
     def run(self):
         self.app.run_polling()
